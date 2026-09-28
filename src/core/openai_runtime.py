@@ -62,14 +62,20 @@ class OpenAIRunner:
             return block_msg
 
         client = self._client()
-        completion = client.chat.completions.create(
+        # Some models (e.g. gpt-5.6-luna) only support default temperature (1).
+        # Only pass temperature if it's non-default or model likely supports it.
+        _hard_models = ("luna", "o1", "o3", "o4")
+        _use_default_temp = any(h in self.model.lower() for h in _hard_models)
+        _create_kwargs = dict(
             model=self.model,
             messages=[
                 {"role": "system", "content": agent.instruction},
                 {"role": "user", "content": user_message},
             ],
-            temperature=self.temperature,
         )
+        if not _use_default_temp:
+            _create_kwargs["temperature"] = self.temperature
+        completion = client.chat.completions.create(**_create_kwargs)
         text = (completion.choices[0].message.content or "").strip()
 
         for hook in self.output_hooks:
