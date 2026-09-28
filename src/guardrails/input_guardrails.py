@@ -63,7 +63,7 @@ def detect_injection(user_input: str) -> InputStatus:
     ]
 
     for pattern in INJECTION_PATTERNS:
-        if re.search(pattern, user_input, re.IGNORECASE):
+        if re.search(pattern, clean_input, re.IGNORECASE):
             return "BLOCK"
     return "ALLOW"
 
